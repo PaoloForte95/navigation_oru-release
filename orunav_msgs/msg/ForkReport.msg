@@ -14,13 +14,14 @@ int32 FORK_POSITION_LOW = 2
 int32 FORK_POSITION_HIGH = 3
 # Forks can be lowered to be used as support legs (for the arm)
 int32 FORK_POSITION_SUPPORT_LEGS = 4
-
 # Moving up
 int32 FORK_MOVING_UP = 5
 # Moving down
 int32 FORK_MOVING_DOWN = 6
 # Failure
 int32 FORK_FAILURE = 7
+# Forks are in a 'higher' postion (for unstack) - we can drive holding a pallet.
+int32 FORK_POSITION_STACK = 8
 
 # Status of the fork controller.
 int32 status
