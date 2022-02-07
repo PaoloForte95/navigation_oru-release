@@ -47,7 +47,7 @@ DiscWorldVisualizer::~DiscWorldVisualizer() {
 	// check is saving the final image is required
 	stopVisualization();
 	if (WP::SAVE_FINAL_VISUALIZATION_TO_FILE) {
-		cvSaveImage((WP::LOG_FILE.append(".PNG")).c_str(), worldDisplayImg_);
+		//imwrite((WP::LOG_FILE.append(".PNG")).c_str(), worldDisplayImg_);
 	}
 	visualizedThread_.join();
 	cvDestroyWindow("World");
@@ -101,7 +101,7 @@ void DiscWorldVisualizer::drawGoal(Configuration* conf, int vehicleID) {
 	this->drawConfiguration(conf, R[ind]/2, G[ind]/2, B[ind]/2);
 	if (WP::SAVE_FINAL_VISUALIZATION_TO_FILE && WP::LOG_LEVEL >= 10) {
 		std::string name = std::string(WP::LOG_FILE);
-		cvSaveImage((name.append(".").append(std::to_string(vehicleID)).append(".PNG")).c_str(), worldDisplayImg_);
+		//cv::imwrite((name.append(".").append(std::to_string(vehicleID)).append(".PNG")).c_str(), worldDisplayImg_);
 	}
 }
 
@@ -125,7 +125,7 @@ void DiscWorldVisualizer::display() {
 		if (WP::SAVE_FINAL_VISUALIZATION_TO_FILE && WP::LOG_LEVEL >= 10) {
 			if (counter % 20 == 0) {
 				std::string name = std::string(WP::LOG_FILE);
-				cvSaveImage((name.append(std::to_string(counter)).append(".PNG")).c_str(), worldDisplayImg_);
+				//imwrite((name.append(std::to_string(counter)).append(".PNG")).c_str(), worldDisplayImg_);
 			}
 			counter ++;
 		}

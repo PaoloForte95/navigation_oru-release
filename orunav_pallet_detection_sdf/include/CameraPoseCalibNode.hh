@@ -1,6 +1,6 @@
 #ifndef CAMERA_POSE_CALIB_NODE_HH
 #define CAMERA_POSE_CALIB_NODE_HH
-
+#define BOOST_ERROR_CODE_HEADER_ONLY
 #include <ros/ros.h>
 #include <tf/transform_datatypes.h>
 #include <geometry_msgs/Pose.h>

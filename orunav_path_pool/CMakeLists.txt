@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(orunav_path_pool)
-
+add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   roscpp

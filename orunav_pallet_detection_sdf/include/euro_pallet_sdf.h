@@ -1,6 +1,6 @@
 #ifndef EURO_PALLET_SDF_H
 #define EURO_PALLET_SDF_H
-
+#define BOOST_ERROR_CODE_HEADER_ONLY
 #include "sdf.h"
 
 namespace sdf {

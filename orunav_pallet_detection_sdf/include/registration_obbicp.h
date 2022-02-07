@@ -1,5 +1,5 @@
 // Author: Dinh-Cuong Hoang, cuong.hoang@oru.se
-
+#define BOOST_ERROR_CODE_HEADER_ONLY
 #ifndef REGISTRATION_OBBICP
 #define REGISTRATION_OBBICP
 

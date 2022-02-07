@@ -27,7 +27,7 @@ else()
 endif()
 
 ## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS system program_options thread)
+find_package(Boost REQUIRED COMPONENTS system program_options thread regex)
 if (${Boost_VERSION} LESS 106500)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_MATH_DISABLE_FLOAT128")
 endif()
@@ -82,7 +82,7 @@ add_executable(get_path_service src/get_path_service.cpp
 add_dependencies(get_path_service ${catkin_EXPORTED_TARGETS})
 target_link_libraries(get_path_service
 #  orunav_motion_planner 
-${catkin_LIBRARIES} ${OpenCV_LIBS}
+${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS}
 )
 
 add_executable(get_path_client src/get_path_client.cpp)

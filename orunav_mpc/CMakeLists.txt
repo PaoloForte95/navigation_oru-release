@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(orunav_mpc)
+add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
+#add_definitions(-DBOOST_SYSTEM_NO_DEPRECATED)
 
 find_package(catkin REQUIRED COMPONENTS 
   cmake_modules

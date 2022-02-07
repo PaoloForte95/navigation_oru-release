@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(orunav_rosbag_tools)
-
+add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 find_package(catkin REQUIRED
   cmake_modules
   nav_msgs

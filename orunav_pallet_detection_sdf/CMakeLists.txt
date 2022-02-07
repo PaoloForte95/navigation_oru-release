@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(orunav_pallet_detection_sdf)
-
+#add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 set(CMAKE_BUILD_TYPE Release)
 find_package(catkin REQUIRED COMPONENTS
   cmake_modules

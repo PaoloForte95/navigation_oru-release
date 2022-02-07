@@ -1,3 +1,5 @@
+#define BOOST_ERROR_CODE_HEADER_ONLY
+
 #include <ros/ros.h>
 #include <boost/program_options.hpp>
 #include <orunav_generic/interfaces.h>
