@@ -22,7 +22,6 @@ class ForkControlSimNode {
     ros::Timer heartbeat_reports_;
     bool visualize;
     double lift_threshold_;
-    double curr_pos_z;
     sauna_msgs::ForkReport current_report_;
     double fork_max_speed_;
     boost::mutex reports_mutex_;
@@ -36,7 +35,6 @@ public:
 	    paramHandle.param<bool>("visualize",visualize,true);
             paramHandle.param<double>("lift_threshold", lift_threshold_, 0.05);
             paramHandle.param<double>("fork_max_speed", fork_max_speed_, 0.04);
-	    paramHandle.param<double>("curr_pos_z", curr_pos_z, 0);
 
             forkreport_pub_ = nh_.advertise<sauna_msgs::ForkReport>("fork/report", 1000);            
             forkcommand_pub_ = nh_.advertise<geometry_msgs::Point>("cmd_fork", 1000);
@@ -68,10 +66,7 @@ public:
 
     
     void send_interpolated_fork_cmds(double current, double target, int rate) {
-
-	ros::Rate r(rate);
-	if(current != target){ //PF
-        
+        ros::Rate r(rate);
         double time_to_move_forks = fabs(target - current)/this->fork_max_speed_;
         int steps = time_to_move_forks * 10;
         double inc_z = (target - current) / (steps*1.);
@@ -81,18 +76,8 @@ public:
             ROS_INFO("[ForkControlSim]: sending new fork command z : %f", cmdfork.z);
             forkcommand_pub_.publish(cmdfork);
             r.sleep();
-        } //end for
-	} //end if PF
-
-	else{ //PF
-	geometry_msgs::Point cmdfork; cmdfork.x = 0; cmdfork.y = 0;
- 	cmdfork.z = current;
-	ROS_INFO("[ForkControlSim]: sending new fork command z PF : %f", cmdfork.z);
-            forkcommand_pub_.publish(cmdfork);
-	r.sleep();
-	}//END else PF
-
-    } //end function
+        }
+    }
 
 
     void process_forkcommand(const sauna_msgs::ForkCommand::ConstPtr &msg) {
@@ -102,13 +87,11 @@ public:
         if (msg->state.position_z > lift_threshold_) {
             // Lift the forks (unless they are already up).
             ROS_INFO("[ForkControlSim]: Forks - high");
-             //if (current_report_.status != current_report_.FORK_POSITION_HIGH)
-	    if (curr_pos_z < msg->state.position_z)
+            if (current_report_.status != current_report_.FORK_POSITION_HIGH)
             {
                 reports_mutex_.lock();
                 current_report_.status = current_report_.FORK_MOVING_UP;
                 double current_pos_z = current_report_.state.position_z;
-		//curr_pos_z = curr_pos_z + 0.1;
                 reports_mutex_.unlock();
 
                 send_interpolated_fork_cmds(current_pos_z, msg->state.position_z, 10);
@@ -116,34 +99,8 @@ public:
                 reports_mutex_.lock();
                 current_report_.status = current_report_.FORK_POSITION_HIGH;
                 current_report_.state.position_z = msg->state.position_z; // Assume we're up.
-		curr_pos_z = msg->state.position_z;
                 reports_mutex_.unlock();
             }
-	     //THIS PART IS ADDED
-
-	    ////////////////////////////
-	
-	    else{
-
-		reports_mutex_.lock();
-                current_report_.status = current_report_.FORK_MOVING_UP;
-                double current_pos_z = current_report_.state.position_z;
-		//curr_pos_z = curr_pos_z + 0.1;
-                reports_mutex_.unlock();
-                send_interpolated_fork_cmds(current_pos_z, current_pos_z, 10);
-               // double current_pos_z = current_report_.state.position_z;
-		//send_interpolated_fork_cmds(current_pos_z, current_pos_z, 10);
-
-
-
-                reports_mutex_.lock();
-                current_report_.status = current_report_.FORK_POSITION_STACK;
-                current_report_.state.position_z = msg->state.position_z; // Assume we're up.
-		curr_pos_z = msg->state.position_z;
-                reports_mutex_.unlock();
-
-		}
-		////////////////////////////
         }
         else
         {

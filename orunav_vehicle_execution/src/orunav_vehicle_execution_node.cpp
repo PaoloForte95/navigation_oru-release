@@ -176,10 +176,6 @@ private:
   TrajectoryProcessor::Params traj_slowdown_params_;
   bool overwrite_traj_params_with_velocity_constraints_;
 
-
-  //Pallet settings 
-  orunav_msgs::ObjectPose palletPosePF; 
-
   // Forklift settings
   int robot_id_;
   bool use_forks_;
@@ -780,15 +776,14 @@ public:
 
     // Based on the loading operations update the map and goal / start poses.
     if (req.target.goal_op.operation == req.target.goal_op.LOAD_DETECT ||
-        req.target.goal_op.operation == req.target.goal_op.LOAD || 
-	req.target.goal_op.operation == req.target.goal_op.UNSTACK_PALLET)
+        req.target.goal_op.operation == req.target.goal_op.LOAD)
     {
       // Update the map with the pallet footprint
       orunav_geometry::PalletModel2dWithState pm = getPalletModelFromRobotTarget(req.target, false);
       constraint_extract::addPolygonToOccupancyMap(pm.getPosePolygon(), map, 100);
       // Update the tgt pose, this will currently use the first suggested pose.
       orunav_generic::Pose2d pickup_pose;
-      if (req.target.goal_op.operation == req.target.goal_op.LOAD_DETECT || req.target.goal_op.operation == req.target.goal_op.UNSTACK_PALLET)
+      if (req.target.goal_op.operation == req.target.goal_op.LOAD_DETECT)
 	pickup_pose = pm.getPickupPoses().getPose2d(0); // For a pallet - this will contain two poses...
       else // i.e. LOAD
 	pickup_pose = pm.getPickupPoses().getPose2d(2); 
@@ -1013,7 +1008,7 @@ public:
                                                                                                     orunav_conversions::createState2dFromPoseSteeringMsg(req.target.goal));
     }
 
-    if (req.target.goal_op.operation == req.target.goal_op.LOAD || req.target.start_op.operation == req.target.start_op.APPROACH_PALLET)
+    if (req.target.goal_op.operation == req.target.goal_op.LOAD)
     {
 
       target.goal;     // the docking pose
@@ -1398,20 +1393,11 @@ public:
   {
     ROS_INFO("[KMOVehicleExecution] got pallet poses");
     // If we're not about to pick a pallet up that we need to detect - no need process this further.
-
-
-   //////PF///////////////
-   
-   ROS_INFO("[KMOVehicleExecutionNode] - Pallet z position : %f", msg->pose.pose.position.z);
-   palletPosePF.pose.pose.position.z = msg->pose.pose.position.z;
-    ////////////////
-
-    if (vehicle_state_.goalOperationLoadDetect() || vehicle_state_.goalOperationLoad())
+    if (vehicle_state_.goalOperationLoadDetect())
     {
       // Add some checks on the pose.
       orunav_generic::Pose2d pallet_pose = orunav_conversions::createPose2dFromMsg(msg->pose.pose);
       ROS_INFO("[KMOVehicleExecution] : in LOAD_DETECT, got a pallet estimate.");
-     
 
       // Need to move the vehicle state to waiting.
       if (!vehicle_state_.setPerceptionReceived())
@@ -1434,7 +1420,7 @@ public:
         //srv.request.target.goal.pose = msg->pose.pose;
         // Compute the pose where we need to drive to (given the pallet pose).
         orunav_geometry::PalletModel2dWithState pm = getPalletModelFromRobotTarget(srv.request.target, false);
-        pm.update(pallet_pose);	
+        pm.update(pallet_pose);
         orunav_generic::Pose2d end_path_pose = pm.getPickupPoseOffset();
         srv.request.target.goal.pose = orunav_conversions::createMsgFromPose2d(end_path_pose);
         srv.request.start_from_current_state = true; // in this case we're fine since we're standing still.
@@ -1605,21 +1591,6 @@ public:
     bool completed_target, move_forks, load;
     VehicleState::OperationState operation;
     inputs_mutex_.lock();
-    double start_pos = msg->state.position_z;
-    //double start_pos = 0.0;
-    
-    //PF
-    //palletPosePF.pose.pose.position.z = 0.2;
-    orunav_msgs::ForkReport forkRep;	
-    int stats = msg->status;
-    double zpos = msg->state.position_z;
-
-   //Minimal check
-   if(palletPosePF.pose.pose.position.z < 0.1){
-	palletPosePF.pose.pose.position.z = 0.1;
-    }
-
-    
     vehicle_state_.update(msg, completed_target, move_forks, load, operation);
     if (completed_target)
     {
@@ -1636,69 +1607,17 @@ public:
     if (move_forks)
     {
       ROS_INFO("[KMOVehicleExecutionNode] %s - moving forks", orunav_node_utils::getIDsString(target_handler_.getLastProcessedID()).c_str());
-      ROS_INFO("[KMOVehicleExecutionNode] - Pallet z position : %f", palletPosePF.pose.pose.position.z);
       orunav_msgs::ForkCommand cmd;
       cmd.robot_id = robot_id_;
-	
 
-      //PF
-      cmd.state.position_z = start_pos;
-
-      //if (operation == VehicleState::LOAD)
-      //{
-        //cmd.state.position_z = start_pos + 0.1 ;
-        
-      //}
       if (operation == VehicleState::LOAD)
-	{
-		if(vehicle_state_.goalOperationLoad() && start_pos < palletPosePF.pose.pose.position.z){
-			cmd.state.position_z = start_pos + 0.17 ;
-			//cmd.state.position_z = start_pos + 0.1 ;
-		ROS_INFO("[KMOVehicleExecutionNode] - Fork status 2 : %f", stats);
-                ROS_INFO("[KMOVehicleExecutionNode] - Fork z position 2 : %f", zpos);
-		}
-	}
-
-
-	else if(operation == VehicleState::APPROACH_PALLET)
-	{
-		if(start_pos < (palletPosePF.pose.pose.position.z-0.1)){
-			//cmd.state.position_z = palletPosePF.pose.pose.position.z-0.1 ;
-			cmd.state.position_z = palletPosePF.pose.pose.position.z-0.07 ;
-			ROS_INFO("[KMOVehicleExecutionNode] - Fork status 1 : %f", stats);
-		         ROS_INFO("[KMOVehicleExecutionNode] - Fork z position 1 : %f", zpos);
-			}
-		
-
-		
-	}
-
-
-
-/*
-       if (operation == VehicleState::LOAD)
-	{
-		if(vehicle_state_.startOperationLoad() && start_pos < (palletPosePF.pose.pose.position.z-0.1)){
-		//cmd.state.position_z = palletPosePF.pose.pose.position.z-0.1 ;
-		cmd.state.position_z = palletPosePF.pose.pose.position.z-0.07 ;
-		ROS_INFO("[KMOVehicleExecutionNode] - Fork status 1 : %f", stats);
-                 ROS_INFO("[KMOVehicleExecutionNode] - Fork z position 1 : %f", zpos);
-		}
-		else if(vehicle_state_.goalOperationLoad() && start_pos < palletPosePF.pose.pose.position.z){
-			cmd.state.position_z = start_pos + 0.17 ;
-		ROS_INFO("[KMOVehicleExecutionNode] - Fork status 2 : %f", stats);
-                ROS_INFO("[KMOVehicleExecutionNode] - Fork z position 2 : %f", zpos);
-		}
-	}
-*/
+      {
+        cmd.state.position_z = 0.1;
+      }
       //else if (operation == VehicleState::UNLOAD)
       //{
       //  cmd.state.position_z = -0.1;
       //}
-     //else if (vehicle_state_.goalOperationLoad() && start_pos < palletPosePF.pose.pose.position.z)
-      //{
-       // cmd.state.position_z = start_pos + 0.1 ;
-     // }
       else if (operation == VehicleState::ACTIVATE_SUPPORT_LEGS)
       {
         cmd.state.position_z = -0.1;

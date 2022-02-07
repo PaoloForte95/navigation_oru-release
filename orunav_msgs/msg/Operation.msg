@@ -22,20 +22,6 @@ int32 PICK_ITEMS = 7
 # Unwrap a pallet
 int32 UNWRAP_PALLET = 8
 
-# Unstack a pallet
-int32 UNSTACK_PALLET = 9
-
-# If cargo should be loadeded at a higher position (i.e. lifting the forks to a known high)
-int32 APPROACH_PALLET = 10
-
-# Push a pallet
-int32 PUSH_DETECT = 11
-
-# Push a pallet 
-int32 PUSH_PALLET = 12
-
-
-
 int32 operation
 int32 property1
 int32 property2

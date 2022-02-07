@@ -6,8 +6,8 @@ class VehicleState {
 public:
   enum State { WAITING_FOR_TASK = 1, PERFORMING_START_OPERATION, DRIVING, PERFORMING_GOAL_OPERATION, TASK_FAILED, WAITING_FOR_TASK_INTERNAL, DRIVING_SLOWDOWN, AT_CRITICAL_POINT };
   enum ControllerState { WAITING, ACTIVE, BRAKE, FINALIZING, ERROR, UNKNOWN, WAITING_TRAJECTORY_SENT, BRAKE_SENT };
-  enum OperationState { NO_OPERATION = 1, UNLOAD, LOAD, LOAD_DETECT, ACTIVATE_SUPPORT_LEGS, LOAD_DETECT_ACTIVE, UNSTACK_PALLET = 9, APPROACH_PALLET = 10};
-  enum ForkState { FORK_POSITION_UNKNOWN = 1, FORK_POSITION_LOW, FORK_POSITION_HIGH, FORK_POSITION_SUPPORT_LEGS, FORK_MOVING_UP, FORK_MOVING_DOWN, FORK_FAILURE, FORK_POSITION_STACK };
+  enum OperationState { NO_OPERATION = 1, UNLOAD, LOAD, LOAD_DETECT, ACTIVATE_SUPPORT_LEGS, LOAD_DETECT_ACTIVE };
+  enum ForkState { FORK_POSITION_UNKNOWN = 1, FORK_POSITION_LOW, FORK_POSITION_HIGH, FORK_POSITION_SUPPORT_LEGS, FORK_MOVING_UP, FORK_MOVING_DOWN, FORK_FAILURE };
 
   enum PerceptionState { PERCEPTION_INACTIVE = 1, PERCEPTION_ACTIVE = 2 };
 
@@ -153,24 +153,6 @@ public:
 	return;
       }
     }
-
-    //PF
-     if (startOperation_ == APPROACH_PALLET) {
-      if (forkState_ == FORK_POSITION_HIGH) {
-        //	controllerState_ = WAITING;
-        state_ = DRIVING;
-	carryingLoad_ = false;
-	return;
-      }
-      else {
-        state_ = PERFORMING_START_OPERATION;
-	moveForks = true;
-	load = false;
-	return;
-      }
-    }
-	
-
     if (startOperation_ == UNLOAD) {
       if (forkState_ == FORK_POSITION_LOW) {
         //	controllerState_ = WAITING;
@@ -185,20 +167,6 @@ public:
 	return;
       }
     }
-     if (startOperation_ == UNSTACK_PALLET) {
-      if (forkState_ == FORK_POSITION_HIGH) {
-        state_ = DRIVING;
-	carryingLoad_ = true;
-	return;
-      }
-      else {
-        state_ = PERFORMING_START_OPERATION;
-	moveForks = true;
-	load = false;
-	return;
-      }
-    }	
-
     if (startOperation_ == ACTIVATE_SUPPORT_LEGS) {
       ROS_ERROR("Cannot active support legs as start operation");
       //      controllerState_ = WAITING;
@@ -229,34 +197,18 @@ public:
 	completedTarget = false;
 	return;
       }
-      //if (forkState_ == FORK_POSITION_HIGH) {
-      //if (forkState_ == FORK_POSITION_HIGH && startOperation_ != goalOperation_) {
-     if (forkState_ == FORK_POSITION_HIGH && startOperation_ != APPROACH_PALLET) {
+      if (forkState_ == FORK_POSITION_HIGH) {
         state_ = WAITING_FOR_TASK;
         //	controllerState_ = WAITING;
 	completedTarget = true;
 	carryingLoad_ = true;
 	return;
       }
-	//THIS PART IS ADDED
-	/////
-     else if (forkState_ == FORK_POSITION_STACK){
-	state_ = WAITING_FOR_TASK;
-        //	controllerState_ = WAITING;
-	completedTarget = true;
-	carryingLoad_ = true;
-	return;
-	 }
-	
-     else {
-        state_ = PERFORMING_GOAL_OPERATION;
-        moveForks = true;
-        completedTarget = false;
-        load = true;
-        return;
-	}
-
-	/////
+      state_ = PERFORMING_GOAL_OPERATION;
+      moveForks = true;
+      completedTarget = false;
+      load = true;
+      return;
     }
     if (goalOperation_ == UNLOAD) {
       if (forkState_ == FORK_POSITION_LOW || !this->isCarryingLoad()) {
@@ -700,8 +652,6 @@ public:
         return std::string("LOAD_DETECT");
       case ACTIVATE_SUPPORT_LEGS:
         return std::string("ACTIVATE_SUPPORT_LEGS");
-     case APPROACH_PALLET:
-        return std::string("APPROACH_PALLET");
       default:
         assert(false);
         break;
@@ -741,22 +691,8 @@ public:
     return false;
   }
 
-
-   bool startOperationLoad() const {
-    if (startOperation_ == LOAD)
-      return true;
-    return false;
-  }
-
   bool goalOperationLoadDetect() const {
     if (goalOperation_ == LOAD_DETECT)
-      return true;
-    return false;
-  }
-
-
-  bool goalOperationUnstackPallet() const {
-    if (goalOperation_ == UNSTACK_PALLET)
       return true;
     return false;
   }
@@ -947,8 +883,6 @@ public:
         return std::string("FORK_MOVING_DOWN");
       case FORK_FAILURE:
         return std::string("FORK_FAILURE");
-       case FORK_POSITION_STACK:
-        return std::string("FORK_POSITION_STACK");
       default:
         break;
     }
